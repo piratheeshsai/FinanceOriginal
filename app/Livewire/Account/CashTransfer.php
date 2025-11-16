@@ -50,55 +50,7 @@ class CashTransfer extends Component
 
 
 
-    // protected function loadAccounts()
-    // {
-    //     $userBranch = Auth::user()->branch_id;
-    //     $user = Auth::user();
-
-    //     $fromAccountsCollection = collect();
-    //     $toAccountsCollection = collect();
-
-    //     $permissions = [
-    //         'transfer from cash' => ['from' => ['cash'], 'to' => ['bank']],
-    //         'transfer from branch bank' => ['from' => ['bank'], 'to' => ['cash']],
-    //         'transfer from cash drawer' => ['from' => ['cash_drawer'], 'to' => ['cash']],
-    //         'transfer from petty cash' => ['from' => ['petty_cash'], 'to' => ['cash']],
-    //         'transfer from collection cash' => ['from' => ['collection_cash'], 'to' => ['cash']],
-    //     ];
-
-    //     if ($user->hasPermissionTo('view all branches')) {
-    //         $this->fromAccounts = Account::where('branch_id', $userBranch)
-    //             ->where('category', 'asset')
-    //             ->whereIn('type', ['cash', 'bank', 'petty_cash', 'cash_drawer', 'collection_cash'])
-    //             ->get();
-
-    //         $this->toAccounts = Account::where('branch_id', $userBranch)
-    //             ->where('category', 'asset')
-    //             ->whereIn('type', ['cash', 'bank', 'petty_cash', 'cash_drawer'])
-    //             ->get();
-    //     } else {
-    //         foreach ($permissions as $permission => $types) {
-    //             if ($user->hasPermissionTo($permission)) {
-    //                 $fromAccounts = Account::where('branch_id', $userBranch)
-    //                     ->where('category', 'asset')
-    //                     ->whereIn('type', $types['from'])
-    //                     ->get();
-
-    //                 $toAccounts = Account::where('branch_id', $userBranch)
-    //                     ->where('category', 'asset')
-    //                     ->whereIn('type', $types['to'])
-    //                     ->get();
-
-    //                 $fromAccountsCollection = $fromAccountsCollection->concat($fromAccounts);
-    //                 $toAccountsCollection = $toAccountsCollection->concat($toAccounts);
-    //             }
-    //         }
-
-    //         $this->fromAccounts = $fromAccountsCollection;
-    //         $this->toAccounts = $toAccountsCollection;
-    //     }
-    // }
-
+  
     protected function loadAccounts()
     {
         $userBranch = Auth::user()->branch_id;

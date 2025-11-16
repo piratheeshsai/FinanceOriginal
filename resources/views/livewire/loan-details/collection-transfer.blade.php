@@ -95,7 +95,12 @@
               <button type="button" class="btn btn-outline-secondary px-4">
                 <i class="bi bi-arrow-left me-2"></i>Back
               </button>
-              <button wire:click="transferToCashier" class="btn btn-primary px-4 py-2 d-flex align-items-center" wire:loading.attr="disabled">
+              <button
+                wire:click="transferToCashier"
+                class="btn btn-primary px-4 py-2 d-flex align-items-center"
+                wire:loading.attr="disabled"
+                @if(!$totalCollectedAmount || $totalCollectedAmount <= 0) disabled @endif
+              >
                 <span wire:loading wire:target="transferToCashier" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 <span wire:loading wire:target="transferToCashier">Processing Transfer...</span>
                 <span wire:loading.remove>Complete Transfer<i class="bi bi-arrow-right ms-2"></i></span>

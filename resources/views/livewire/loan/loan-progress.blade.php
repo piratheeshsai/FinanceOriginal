@@ -11,7 +11,7 @@
                            class="form-control"
                            placeholder="Search by name or NIC..."
                            style="height: 32px; padding: 5px;">
-                    <button wire:click="$set('search', '')"
+                            <button wire:click="$set('search', '')"
                             class="btn btn-light border"
                             type="button"
                             style="height: 32px; padding: 5px;">
@@ -28,6 +28,15 @@
     </div>
 
     <div class="card-body bg-white">
+        <div class="mb-3">
+            <label for="branchFilter" class="form-label">Branch</label>
+            <select wire:model.live="branchFilter" id="branchFilter" class="form-select">
+                <option value="all">All Branches</option>
+                @foreach($branches as $branch)
+                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                @endforeach
+            </select>
+        </div>
         <div class="table-responsive">
             <table class="table table-bordered table-hover align-middle mb-0 table-sm-custom">
                 <thead class="bg-light">

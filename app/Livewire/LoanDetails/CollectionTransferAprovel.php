@@ -130,6 +130,10 @@ class CollectionTransferAprovel extends Component
                 throw new Exception("Failed to create transaction record");
             }
 
+
+
+
+
             // Update transfer status with strict validation
             $transferUpdated = Transfer::where('id', $transferId)
                 ->where('status', 'pending') // Double-check status hasn't changed
