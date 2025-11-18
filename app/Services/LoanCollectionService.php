@@ -474,7 +474,7 @@ class LoanCollectionService
         }
 
         $loanProgress->total_paid_amount = $totalPaid;
-        $loanProgress->balance = max(0, $loanProgress->total_amount - $totalPaid);
+        $loanProgress->balance = max(0, round($loanProgress->total_amount - $totalPaid, 2));
 
         // Update status based on balance
         if ($loanProgress->balance <= 0) {

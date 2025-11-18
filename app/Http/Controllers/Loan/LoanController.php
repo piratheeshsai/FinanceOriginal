@@ -136,8 +136,7 @@ class LoanController extends Controller
             'loan_amount' => 'required|numeric',
             'document_charge' => 'required|numeric',
             'loan_start' => 'required|date',
-            'loan_date' => 'required|date',
-            'center_id' => 'required|exists:centers,id',  // Ensure it's a valid center ID
+            'center_id' => 'required|exists:centers,id',
             'loan_guarantor' => 'required|array|min:1',  // Guarantor(s) array validation
             'customer_id' => 'required|exists:customers,id',  // Ensure it's a valid customer ID
         ]);
@@ -180,7 +179,6 @@ class LoanController extends Controller
                     'loan_amount' => $validated['loan_amount'],
                     'document_charge' => $validated['document_charge'],
                     'start_date' => $validated['loan_start'],
-                    'loan_date' => $validated['loan_date'],  // Loan date
                     'customer_id' => $validated['customer_id'],  // Customer ID
                     'center_id' => $validated['center_id'],  // Center ID
                     'loan_creator_name' => auth()->id(),  // Name of the authenticated user
@@ -197,7 +195,7 @@ class LoanController extends Controller
 
             // Fetch approvers and fire the event
             $approvers = User::permission('approve-loan')->get();
-            event(new NewLoanCreated($loan, $approvers));
+            // event(new NewLoanCreated($loan, $approvers));
 
             // Redirect back with success message
             return redirect()->route('loan.index')->with('status', 'Loan created successfully!');
@@ -308,7 +306,6 @@ class LoanController extends Controller
             'loan_amount' => 'required|numeric|min:1',
             'document_charge' => 'required|numeric',
             'loan_start' => 'required|date',
-            'loan_date' => 'required|date',
             'center_id' => 'required|exists:centers,id',
             'group_id' => 'nullable|exists:groups,id', // Optional for individual loans
             'customer_id' => 'required|exists:customers,id', // Mandatory customer assignment
@@ -346,7 +343,6 @@ class LoanController extends Controller
                     'loan_amount' => $validated['loan_amount'],
                     'document_charge' => $validated['document_charge'],
                     'start_date' => $validated['loan_start'],
-                    'loan_date' => $validated['loan_date'],
                     'center_id' => $validated['center_id'],
                     'group_id' => $validated['group_id'] ?? null,
                     'customer_id' => $validated['customer_id'],

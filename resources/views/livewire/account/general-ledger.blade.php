@@ -25,7 +25,7 @@
     <!-- Filters Section -->
     <div class="filters-card">
         <div class="filters-header">
-            <h3><i class="fas fa-filter"></i> Filters</h
+            <h3 class="text-white"><i class="fas fa-filter"></i> Filters</h3>
         </div>
         <div class="filters-body">
             <div class="filter-row">
@@ -108,24 +108,24 @@
         </div>
 
         <div class="modern-table-wrapper">
-            <table class="modern-table">
-                <thead>
+            <table class="modern-table styled-table">
+                <thead class="table-navy text-white">
                     <tr>
-                        <th>Date & Time</th>
-                        <th>Description</th>
-                        <th>Debit Account</th>
-                        <th>Credit Account</th>
-                        <th>Amount</th>
+                        <th style="width: 110px;">Date & Time</th>
+                        <th style="width: 140px;">Description</th>
+                        <th style="width: 180px;">Debit Account</th>
+                        <th style="width: 180px;">Credit Account</th>
+                        <th style="width: 120px;" class="text-end">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($transactions as $transaction)
                         <tr class="transaction-row">
-                            <td class="date-cell">
+                            <td style="max-width:110px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                 <div class="date-primary">{{ $transaction->created_at->format('M d, Y') }}</div>
                                 <div class="date-secondary">{{ $transaction->created_at->format('h:i A') }}</div>
                             </td>
-                            <td class="description-cell">
+                            <td style="max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                 <div class="description-primary">
                                     {{ $transaction->description ?? 'Transaction Entry' }}
                                 </div>
@@ -135,50 +135,25 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="account-cell">
-                                @php
-                                    $debitAccount = $transaction->debitAccount;
-                                    $debitCategory = $debitAccount->category ?? 'unknown';
-
-                                    // Determine if this is an increase or decrease for debit account
-                                    $isDebitIncrease = in_array($debitCategory, ['asset', 'expense']);
-                                @endphp
-
-                                <div class="account-badge debit-badge {{ $isDebitIncrease ? 'increase' : 'decrease' }}">
-                                    <i class="fas fa-arrow-{{ $isDebitIncrease ? 'up' : 'down' }}"></i>
-                                    {{ $debitAccount->account_name ?? 'Unknown Account' }}
-                                    <span class="account-type">({{ ucfirst($debitCategory) }})</span>
+                            <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                <div class="account-badge debit-badge">
+                                    {{ $transaction->debitAccount->account_name ?? 'Unknown Account' }}
+                                    <span class="account-type">({{ ucfirst($transaction->debitAccount->category ?? 'unknown') }})</span>
                                 </div>
-                                @if($debitAccount && $debitAccount->account_code)
-                                    <div class="account-code">{{ $debitAccount->account_code }}</div>
+                                @if($transaction->debitAccount && $transaction->debitAccount->account_code)
+                                    <div class="account-code">{{ $transaction->debitAccount->account_code }}</div>
                                 @endif
-                                <div class="balance-effect {{ $isDebitIncrease ? 'positive' : 'negative' }}">
-                                    {{ $isDebitIncrease ? '+' : '-' }} Rs. {{ number_format($transaction->amount, 2) }}
-                                </div>
                             </td>
-
-                            <td class="account-cell">
-                                @php
-                                    $creditAccount = $transaction->creditAccount;
-                                    $creditCategory = $creditAccount->category ?? 'unknown';
-
-                                    // Determine if this is an increase or decrease for credit account
-                                    $isCreditIncrease = in_array($creditCategory, ['liability', 'equity', 'revenue']);
-                                @endphp
-
-                                <div class="account-badge credit-badge {{ $isCreditIncrease ? 'increase' : 'decrease' }}">
-                                    <i class="fas fa-arrow-{{ $isCreditIncrease ? 'up' : 'down' }}"></i>
-                                    {{ $creditAccount->account_name ?? 'Unknown Account' }}
-                                    <span class="account-type">({{ ucfirst($creditCategory) }})</span>
+                            <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                <div class="account-badge credit-badge">
+                                    {{ $transaction->creditAccount->account_name ?? 'Unknown Account' }}
+                                    <span class="account-type">({{ ucfirst($transaction->creditAccount->category ?? 'unknown') }})</span>
                                 </div>
-                                @if($creditAccount && $creditAccount->account_code)
-                                    <div class="account-code">{{ $creditAccount->account_code }}</div>
+                                @if($transaction->creditAccount && $transaction->creditAccount->account_code)
+                                    <div class="account-code">{{ $transaction->creditAccount->account_code }}</div>
                                 @endif
-                                <div class="balance-effect {{ $isCreditIncrease ? 'positive' : 'negative' }}">
-                                    {{ $isCreditIncrease ? '+' : '-' }} Rs. {{ number_format($transaction->amount, 2) }}
-                                </div>
                             </td>
-                            <td class="amount-cell">
+                            <td class="amount-cell text-end">
                                 <div class="amount-value">Rs. {{ number_format($transaction->amount, 2) }}</div>
                             </td>
                         </tr>
@@ -228,20 +203,24 @@
 
 <style>
 /* Modern General Ledger Styles */
+body, .general-ledger-container {
+    background-color: #f4f8fb !important;
+}
+
 .general-ledger-container {
-    padding: 24px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 16px;
+    background: #f4f8fb;
     min-height: 100vh;
 }
 
 /* Header Styles - Base */
 .page-header {
-    background: white;
-    border-radius: 24px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    background: #23395d;
+    border-radius: 1rem;
+    padding: 18px 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 16px rgba(44,62,80,0.08);
+    color: #fff;
 }
 
 .header-content {
@@ -255,21 +234,21 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    flex: 1;
+    flex: 1; /* This makes left section take all available space */
     min-width: 0;
 }
 
 .page-icon {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    border-radius: 20px;
+    width: 40px;
+    height: 40px;
+    background: #008080;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 24px;
-    flex-shrink: 0;
+    color: #fff;
+    font-size: 20px;
+    margin-right: 12px;
 }
 
 .page-title {
@@ -278,155 +257,64 @@
 }
 
 .page-title h1 {
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 700;
-    color: #2d3748;
+    color: #fff;
     margin: 0;
 }
 
 .subtitle {
-    color: #718096;
-    margin: 4px 0 0 0;
-    font-size: 16px;
+    color: #b2becd;
+    margin: 2px 0 0 0;
+    font-size: 13px;
 }
 
 .header-actions {
-    flex-shrink: 0;
     margin-left: auto;
-}
-
-.btn-modern {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
-    white-space: nowrap;
 }
 
-.btn-export {
-    background: linear-gradient(135deg, #48bb78, #38a169);
-    color: white;
+.header-actions .btn-modern {
+    background: #008080;
+    color: #fff;
+    border-radius: 1rem;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.08);
 }
 
-.btn-modern:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-/* Responsive - Mobile */
-@media (max-width: 768px) {
-    .page-header {
-        padding: 16px;
-    }
-
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .header-left {
-        gap: 12px;
-        flex: 1;
-        min-width: 0;
-    }
-
-    .page-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-    }
-
-    .page-title h1 {
-        font-size: 20px;
-    }
-
-    .subtitle {
-        font-size: 12px;
-    }
-
-    .header-actions {
-        flex-shrink: 0;
-    }
-
-    .btn-modern {
-        padding: 10px 16px;
-        font-size: 14px;
-    }
-
-    .btn-text {
-        display: none;
-    }
-}
-
-@media (max-width: 480px) {
-    .page-header {
-        padding: 12px;
-    }
-
-    .header-content {
-        gap: 8px;
-    }
-
-    .page-title h1 {
-        font-size: 16px;
-    }
-
-    .btn-modern {
-        padding: 8px 12px;
-        min-width: 40px;
-    }
+.header-actions .btn-modern:hover {
+    background: #006666;
 }
 
 /* Filters Card */
 .filters-card {
-    background: white;
-    border-radius: 24px;
-    margin-bottom: 24px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    background: #fff;
+    border-radius: 1rem;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.08);
 }
 
 .filters-header {
-    background: linear-gradient(135deg, #f7fafc, #edf2f7);
-    padding: 16px 24px;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.filters-header h3 {
-    margin: 0;
-    color: #2d3748;
-    font-size: 18px;
+    background: #23395d;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 1rem 1rem 0 0;
+    font-size: 16px;
     font-weight: 600;
 }
 
 .filters-body {
-    padding: 24px;
-}
-
-.filter-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 2fr auto;
-    gap: 20px;
-    align-items: end;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    padding: 18px;
 }
 
 .filter-label {
     font-weight: 600;
-    color: #4a5568;
-    font-size: 14px;
+    color: #23395d;
+    font-size: 13px;
 }
 
 .input-wrapper {
@@ -435,21 +323,22 @@
 
 .input-icon {
     position: absolute;
-    left: 12px;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
-    color: #a0aec0;
+    color: #008080;
     z-index: 1;
+    font-size: 15px;
 }
 
 .modern-input {
     width: 100%;
-    padding: 12px 12px 12px 40px;
-    border: 2px solid #e2e8f0;
-    border-radius: 16px;
-    font-size: 14px;
+    padding: 8px 12px 8px 36px;
+    border: 2px solid #008080;
+    border-radius: 1rem;
+    background: #fff;
+    font-size: 13px;
     transition: all 0.3s ease;
-    background: white;
 }
 
 .modern-input:focus {
@@ -459,77 +348,81 @@
 }
 
 .btn-clear {
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #f56565, #e53e3e);
-    color: white;
-    border: none;
-    border-radius: 16px;
+    background: #e3342f;
+    color: #fff;
+    border-radius: 1rem;
+    padding: 8px 16px;
+    font-size: 13px;
     font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    border: none;
 }
 
 .btn-clear:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(245, 101, 101, 0.3);
+    background: #c82333;
+}
+
+.filter-actions {
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    margin-top: 18px;
+    margin-left: 0;
+}
+
+.filter-actions {
+    margin-left: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 /* Statistics Cards - 3 Card Layout */
 .stats-grid-3 {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-bottom: 24px;
+    gap: 14px;
+    margin-bottom: 18px;
 }
 
 .stat-card {
-    background: white;
-    border-radius: 24px;
-    padding: 24px;
+    background: #23395d;
+    border-radius: 1rem;
+    padding: 18px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
-}
-
-.stat-card:hover {
-    transform: translateY(-4px);
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+    color: #fff;
 }
 
 .stat-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 18px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #008080;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    color: white;
+    font-size: 18px;
+    color: #fff;
 }
 
-.stat-today .stat-icon { background: linear-gradient(135deg, #9f7aea, #805ad5); }
-.stat-filtered .stat-icon { background: linear-gradient(135deg, #48bb78, #38a169); }
-.stat-monthly-avg .stat-icon { background: linear-gradient(135deg, #4299e1, #3182ce); }
-
 .stat-number {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 700;
-    color: #2d3748;
+    color: #fff;
     line-height: 1;
 }
 
 .stat-label {
-    color: #718096;
-    font-size: 14px;
+    color: #b2becd;
+    font-size: 13px;
     font-weight: 500;
 }
 
 .stat-sub {
-    color: #a0aec0;
+    color: #b2becd;
     font-size: 11px;
     font-weight: 400;
     margin-top: 2px;
@@ -979,6 +872,54 @@
         background: white;
         padding: 0;
     }
+}
+
+/* Custom styles for the transactions table */
+.styled-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 1rem;
+    overflow: hidden;
+    background: #fff;
+    font-size: 0.95rem;
+}
+.table-navy th {
+    background-color: #23395d !important;
+    color: #fff !important;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.7em 0.5em;
+    border-bottom: 2px solid #008080;
+    text-align: left;
+    vertical-align: middle;
+}
+.styled-table td {
+    padding: 0.6em 0.5em;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.styled-table tr:last-child td {
+    border-bottom: none;
+}
+.amount-cell {
+    text-align: right;
+}
+.styled-table th, .styled-table td {
+    border-right: 1px solid #e9ecef;
+}
+.styled-table th:last-child, .styled-table td:last-child {
+    border-right: none;
+}
+.styled-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+.styled-table tr:hover {
+    background-color: #e0f7fa;
 }
 </style>
 </div>

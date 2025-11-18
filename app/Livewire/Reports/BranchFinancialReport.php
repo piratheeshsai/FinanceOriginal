@@ -169,14 +169,33 @@ class BranchFinancialReport extends Component
         $revenue = $this->sumAccountBalances($this->getAccountsByCategory($branchId, 'revenue'));
         $expenses = $this->sumAccountBalances($this->getAccountsByCategory($branchId, 'expense'));
 
+        // Get equity accounts
+        $equityAccounts = $this->getAccountsByCategory($branchId, 'equity');
+        $branchCapital = 0;
+        $ownerDraw = 0;
+
+        foreach ($equityAccounts as $account) {
+            if ($account['type'] === 'branch_capital') {
+                $branchCapital += $account['ending_balance'];
+            }
+            if ($account['type'] === 'owner_draw') {
+                $ownerDraw += $account['ending_balance'];
+            }
+        }
+
+        $netIncome = $revenue - $expenses;
+        $totalEquity = $branchCapital - $ownerDraw + $netIncome;
+
         return [
             'total_assets' => $assets,
             'total_liabilities' => $liabilities,
-            'total_equity' => $equity + $revenue - $expenses,
-            'total_liabilities_and_equity' => $liabilities + $equity + $revenue - $expenses,
+            'total_equity' => $totalEquity,
+            'total_liabilities_and_equity' => $liabilities + $totalEquity,
             'total_revenue' => $revenue,
             'total_expenses' => $expenses,
-            'net_income' => $revenue - $expenses,
+            'net_income' => $netIncome,
+            'branch_capital' => $branchCapital,
+            'owner_draw' => $ownerDraw,
         ];
     }
 

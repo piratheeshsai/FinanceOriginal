@@ -106,7 +106,7 @@
                                     <div class="form-group mb-0">
                                         <label class="form-label small text-muted mb-1">Items/Page</label>
                                         <select class="form-select shadow-sm"
-                                                wire:model="perPage">
+                                                wire:model.live="perPage">
                                             <option value="10">10</option>
                                             <option value="25">25</option>
                                             <option value="50">50</option>
@@ -257,7 +257,6 @@
     @livewire('collection-modal-component')
 
 
-</div>
 <script>
 
 function confirmSubmit() {

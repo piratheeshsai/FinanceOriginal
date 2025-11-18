@@ -4,10 +4,15 @@
     <meta charset="utf-8">
     <title>Today's Collections - {{ now()->format('d M, Y') }}</title>
     <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
-            margin: 20px;
+            margin: 0; /* Remove extra margin */
         }
 
         /* Header Styles */
@@ -41,7 +46,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin: 0; /* Remove extra margin */
         }
 
         th {
@@ -52,7 +57,7 @@
         }
 
         td {
-            padding: 8px;
+            padding: 6px; /* Reduce padding for more space */
             border: 1px solid #ddd;
         }
 
@@ -145,13 +150,21 @@
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>
-                    <strong>{{ $collection->loan->customer->full_name }}</strong><br>
-                    {{ $collection->loan->customer->phone }}
+                    <strong>{{ $collection->loan?->customer?->full_name ?? 'Unknown' }}</strong><br>
+                    {{ $collection->loan?->customer?->phone ?? '-' }}
                 </td>
-                <td>{{ $collection->loan->center->name }}</td>
-                <td>{{ number_format($collection->due, 2) }}</td>
-                <td>{{ number_format($collection->paid, 2) }}</td>
-                <td>{{ number_format($collection->pending_due, 2) }}</td>
+                <td>
+                    {{ $collection->loan?->center?->name ?? 'Unknown' }}
+                </td>
+                <td>
+                    {{ number_format($collection->due ?? 0, 2) }}
+                </td>
+                <td>
+                    {{ number_format($collection->paid ?? 0, 2) }}
+                </td>
+                <td>
+                    {{ number_format($collection->pending_due ?? 0, 2) }}
+                </td>
                 <td class="signature-column">
                     <div style="border-bottom: 1px solid #000; width: 80%; margin: 15px auto 5px; position: relative;">
                         <span style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);

@@ -3,6 +3,7 @@
 namespace App\Livewire\Settings;
 
 use App\Models\Account;
+use App\Models\Branch;
 use App\Models\Company;
 use App\Models\Transaction;
 use File;
@@ -35,6 +36,9 @@ class CompanySettings extends Component
     public $withdrawal_description;
     public $amount;
 
+    public $branches = [];
+    public $branch_id; // For the selected branch in the modal
+
     protected $rules = [
         'name' => 'required|string|max:255',
         'email' => 'required|email|max:255',
@@ -59,6 +63,9 @@ class CompanySettings extends Component
     {
         $this->company = Company::first();
         $this->loadCompanyData();
+
+        // Load all branches for dropdown
+        $this->branches = Branch::orderBy('name')->get();
 
         // Get capital balance from the capital account
         $capitalAccount = Account::where('account_number', 'CAPITAL-001')
@@ -275,54 +282,62 @@ class CompanySettings extends Component
     {
         // Validate the withdrawal input
         $this->validate([
-            'withdrawal_amount' => 'required|numeric|min:1|max:' . $this->capital_balance,
+            'withdrawal_amount' => 'required|numeric|min:1',
             'withdrawal_description' => 'required|string|max:255',
+            'branch_id' => 'required|exists:branches,id',
         ], [
             'withdrawal_amount.required' => 'Please enter a withdrawal amount',
             'withdrawal_amount.numeric' => 'Amount must be a number',
             'withdrawal_amount.min' => 'Amount must be at least 1',
-            'withdrawal_amount.max' => 'Amount cannot exceed available capital balance',
             'withdrawal_description.required' => 'Please provide a description for this withdrawal',
+            'branch_id.required' => 'Please select a branch',
+            'branch_id.exists' => 'Selected branch does not exist',
         ]);
 
         try {
-            // Fetch the required accounts
-            $capitalAccount = Account::where('account_number', 'CAPITAL-001')
-                ->where('type', 'capital')
-                ->first();
-
-            $ownerDrawAccount = Account::where('account_number', 'OWNER-DRAW-company')
-                ->where('type', 'owner_draw')
-                ->first();
-
-            $mainBankAccount = Account::where('account_number', 'BANK-MAIN')
+            // Fetch branch bank account
+            $branchBankAssetAccount = Account::where('branch_id', $this->branch_id)
                 ->where('type', 'bank')
                 ->first();
 
+            $branchBankCapitalEquityAccount = Account::where('branch_id', $this->branch_id)
+                ->where('type', 'branch_capital')
+                ->first();
+
+            // Fetch branch owner draw account
+            $branchOwnerDrawEquityAccount = Account::where('branch_id', $this->branch_id)
+                ->where('type', 'owner_draw')
+                ->first();
+
+             $branchCashDrawerAssetAccount = Account::where('branch_id', $this->branch_id)
+                ->where('type', 'cash_drawer')
+                ->first();
+
             // Check if the required accounts exist
-            if (!$capitalAccount || !$ownerDrawAccount || !$mainBankAccount) {
-                throw new \Exception('Required accounts not found');
+            if (!$branchBankAssetAccount || !$branchOwnerDrawEquityAccount || !$branchBankCapitalEquityAccount || !$branchCashDrawerAssetAccount) {
+                throw new \Exception('Required branch accounts not found');
             }
 
-            // Check if there's enough balance in the capital account
-            if ($capitalAccount->balance < $this->withdrawal_amount) {
-                throw new \Exception('Insufficient capital balance');
+            // Check if there's enough balance in the branch bank account
+            if ($branchBankAssetAccount->balance < $this->withdrawal_amount) {
+                throw new \Exception('Insufficient branch bank balance');
             }
 
-            // Begin the transaction: Debit capital, Credit owner draw
-            Transaction::create([
-                'branch_id' => null, // Company-level transaction
-                'debit_account_id' => $capitalAccount->id, // Capital decreases (debit)
-                'credit_account_id' => $ownerDrawAccount->id, // Owner's Draw increases (credit)
+            // Create the transaction: Debit branch bank, Credit branch owner draw
+
+
+             Transaction::create([
+                'branch_id' => $this->branch_id,
+                'debit_account_id' => $branchOwnerDrawEquityAccount->id,    // Debit owner draw (equity, increases)
+                'credit_account_id' => $branchBankAssetAccount->id,         // Credit bank (asset, decreases)
                 'amount' => $this->withdrawal_amount,
                 'description' => $this->withdrawal_description,
                 'transaction_date' => now(),
                 'created_by' => Auth::id(),
-                'transaction_type' => 'owner_withdrawal'
+                'transaction_type' => 'branch_owner_withdrawal'
             ]);
 
-            // Now, reduce the bank balance
-            $mainBankAccount->decrement('balance', $this->withdrawal_amount);
+
 
             // Reset the withdrawal fields
             $this->resetWithdrawalFields();
@@ -331,7 +346,7 @@ class CompanySettings extends Component
             $this->dispatch('closeWithdrawalModal');
 
             // Dispatch success alert
-            $this->dispatch('show-success-alert', message: 'Withdrawal processed successfully.');
+            $this->dispatch('show-success-alert', message: 'Branch withdrawal processed successfully.');
 
         } catch (\Exception $e) {
             // Dispatch error alert on failure

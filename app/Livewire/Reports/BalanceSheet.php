@@ -37,7 +37,7 @@ class BalanceSheet extends Component
     ->get();
 
     // Separate account types
-    $assetAccounts = $accounts->where('category', 'asset');
+    $assetAccounts = $accounts->where('category', 'asset')->where('type', '!=', 'cash_drawer');;
     $liabilityAccounts = $accounts->where('category', 'liability');
 
     // Handle equity accounts based on context
@@ -59,11 +59,13 @@ class BalanceSheet extends Component
     // Calculate totals
     $totalAssets = $assetAccounts->sum('balance');
     $totalLiabilities = $liabilityAccounts->sum('balance');
-    $totalEquity = $equityAccounts->sum('balance') + $netIncome;
 
-    // Validate accounting equation
-    $balancesMatch = (round($totalAssets, 2) === round(($totalLiabilities + $totalEquity), 2));
+    // Get capital and owner draw accounts
+    $capitalAccount = $accounts->where('type', $this->branchId ? 'branch_capital' : 'capital')->first();
+    $ownerDrawAccount = $accounts->where('type', 'owner_draw')->first();
 
+    // Calculate total equity correctly
+    $totalEquity = ($capitalAccount->balance ?? 0) - ($ownerDrawAccount->balance ?? 0) + $netIncome;
 
         return view('livewire.reports.balance-sheet', [
             'assetAccounts' => $assetAccounts,
@@ -75,9 +77,11 @@ class BalanceSheet extends Component
             'totalLiabilities' => $totalLiabilities,
             'totalEquity' => $totalEquity,
             'netIncome' => $netIncome,
-            'balancesMatch' => $balancesMatch,
-            'totalRevenue' => $totalRevenue, // Added
-        'totalExpenses' => $totalExpenses,
+            'balancesMatch' => (round($totalAssets, 2) === round(($totalLiabilities + $totalEquity), 2)),
+            'totalRevenue' => $totalRevenue,
+            'totalExpenses' => $totalExpenses,
+            'capital' => $capitalAccount->balance ?? 0,
+            'ownerDraw' => $ownerDrawAccount->balance ?? 0,
         ]);
     }
 
