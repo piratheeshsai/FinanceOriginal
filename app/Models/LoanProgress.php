@@ -17,6 +17,7 @@ class LoanProgress extends Model
         'paid_amount',       // Amount paid so far
         'status',            // Loan status (Pending, Completed)
         'last_due_date',     // Last due date for the loan (loan completion date)
+         // Document charge percentage
     ];
 
     // Define the relationship with the Loan model
@@ -38,5 +39,5 @@ class LoanProgress extends Model
         return $this->status == 'Completed';
     }
 
-  
+
 }

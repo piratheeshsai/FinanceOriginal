@@ -32,7 +32,7 @@
                                     #</th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ">
                                     Loan Name</th>
-                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                <th class="text-uppercase text-secondary text-xxs
                                     Loan Type</th>
 
                                 <th
@@ -45,6 +45,9 @@
                                 <th
                                     class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                     Loan Term</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+    Doc. Charge (%)
+</th>
 
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                     Action
@@ -78,6 +81,11 @@
                                     </td>
                                     <td class="align-middle text-center">
                                         <p class="text-xs font-weight-bold mb-0"> {{ $scheme->loan_term }}</p>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <p class="text-xs font-weight-bold mb-0">
+                                            {{ $scheme->document_charge_percentage ?? '-' }}
+                                        </p>
                                     </td>
                                     <td>
                                         <div class="d-flex px-3 py-1">
@@ -115,7 +123,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No Loan Schemes Available</td>
+                                    <td colspan="8" class="text-center">No Loan Schemes Available</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -262,6 +270,12 @@
                                             <label for="editLoanTerm" class="form-label">Loan Term</label>
                                             <input type="number" id="editLoanTerm" class="form-control" wire:model="editLoanTerm">
                                             @error('editLoanTerm') <span class="text-danger">{{ $message }}</span> @enderror
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="editDocumentChargePercentage" class="form-label">Document Charge Percentage</label>
+                                            <input type="number" id="editDocumentChargePercentage" class="form-control" wire:model="editDocumentChargePercentage" step="0.01">
+                                            @error('editDocumentChargePercentage') <span class="text-danger">{{ $message }}</span> @enderror
                                         </div>
 
                                         <button type="submit" class="btn btn-primary">Save Changes</button>

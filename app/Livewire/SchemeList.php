@@ -14,7 +14,7 @@ class SchemeList extends Component
 {
     use WithPagination;
 
-    public $perPage = 5;
+    public $perPage = 10;
     public $selectedSchemeId;    // To store selected scheme
     public $amount;              // User input loan amount
     public $payments = [];
@@ -24,52 +24,55 @@ class SchemeList extends Component
     public $editInterestRate;
     public $editRepaymentDuration;
     public $editLoanTerm;
-      // Results to display calculated values
-      protected $listeners = ['deleteConf' => 'deleteLoanSchemes'];
+    public $editDocumentChargePercentage;  // Added property for document charge percentage
+    // Results to display calculated values
+    protected $listeners = ['deleteConf' => 'deleteLoanSchemes'];
 
 
 
-      public function openEditModal($schemeId)
-      {
-          $scheme = LoanScheme::find($schemeId);
+    public function openEditModal($schemeId)
+    {
+        $scheme = LoanScheme::find($schemeId);
 
-          if ($scheme) {
-              $this->editSchemeId = $scheme->id;
-              $this->editLoanName = $scheme->loan_name;
-              $this->editLoanType = $scheme->loan_type;
-              $this->editInterestRate = $scheme->interest_rate;
-              $this->editRepaymentDuration = $scheme->collecting_duration;
-              $this->editLoanTerm = $scheme->loan_term;
+        if ($scheme) {
+            $this->editLoanName = $scheme->loan_name;
+            $this->editLoanType = $scheme->loan_type;
+            $this->editInterestRate = $scheme->interest_rate;
+            $this->editRepaymentDuration = $scheme->collecting_duration;
+            $this->editLoanTerm = $scheme->loan_term;
+            $this->editDocumentChargePercentage = $scheme->document_charge_percentage; // <-- Add this line
+            $this->editSchemeId = $scheme->id;
 
-              $this->dispatch('show-edit-modal'); // Trigger the edit modal display
-          }
-      }
-      public function updateLoanScheme()
-      {
-          $this->validate([
-              'editLoanName' => 'required|string|max:255',
-              'editLoanType' => 'required|string|max:255',
-              'editInterestRate' => 'required|numeric|min:0|max:100',
-              'editRepaymentDuration' => 'required|string|max:255',
-              'editLoanTerm' => 'required|max:255',
-          ]);
+            $this->dispatch('show-edit-modal'); // Trigger the edit modal display
+        }
+    }
+    public function updateLoanScheme()
+    {
+        $this->validate([
+            'editLoanName' => 'required|string|max:255',
+            'editLoanType' => 'required|string|max:255',
+            'editInterestRate' => 'required|numeric|min:0|max:100',
+            'editRepaymentDuration' => 'required|string|max:255',
+            'editLoanTerm' => 'required|max:255',
+            'editDocumentChargePercentage' => 'nullable|numeric|min:0|max:100', // Added validation
+        ]);
 
-          $scheme = LoanScheme::find($this->editSchemeId);
+        $scheme = LoanScheme::find($this->editSchemeId);
 
-          if ($scheme) {
-              $scheme->update([
-                  'loan_name' => $this->editLoanName,
-                  'loan_type' => $this->editLoanType,
-                  'interest_rate' => $this->editInterestRate,
-                  'collecting_duration' => $this->editRepaymentDuration,
-                  'loan_term' => $this->editLoanTerm,
-              ]);
+        if ($scheme) {
+            $scheme->update([
+                'loan_name' => $this->editLoanName,
+                'loan_type' => $this->editLoanType,
+                'interest_rate' => $this->editInterestRate,
+                'collecting_duration' => $this->editRepaymentDuration,
+                'loan_term' => $this->editLoanTerm,
+                'document_charge_percentage' => $this->editDocumentChargePercentage, // Added update
+            ]);
 
-              $this->dispatch('hide-edit-modal');
-              $this->dispatch('SchemeUpdated');
-
-          }
-      }
+            $this->dispatch('hide-edit-modal');
+            $this->dispatch('SchemeUpdated');
+        }
+    }
 
 
 
@@ -147,7 +150,8 @@ class SchemeList extends Component
 
         if ($hasLoans) {
             // If loans exist, show error alert
-            $this->dispatch('showAlert',
+            $this->dispatch(
+                'showAlert',
                 type: 'error',
                 message: 'Cannot delete scheme. There are existing loans associated with it.'
             );
@@ -165,7 +169,7 @@ class SchemeList extends Component
 
     public function render()
     {
-        $loanSchemes = LoanScheme::paginate($this->perPage);
+        $loanSchemes = LoanScheme::orderBy('created_at', 'desc')->paginate($this->perPage);
         return view('livewire.scheme-list', compact('loanSchemes'));
     }
 }

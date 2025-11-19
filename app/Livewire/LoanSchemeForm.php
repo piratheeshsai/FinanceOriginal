@@ -8,7 +8,7 @@ use Livewire\Component;
 
 class LoanSchemeForm extends Component
 {
-    public $loan_name, $loan_type, $interest_rate, $collecting_duration, $loan_term;
+    public $loan_name, $loan_type, $interest_rate, $collecting_duration, $loan_term, $document_charge_percentage;
 
     // Validation rules
     protected $rules = [
@@ -17,6 +17,7 @@ class LoanSchemeForm extends Component
         'interest_rate' => 'required|numeric|min:0',
         'collecting_duration' => 'required|in:daily,weekly,monthly',
         'loan_term' => 'required|integer|min:1',
+        'document_charge_percentage' => 'nullable|numeric|min:0|max:100',
     ];
 
     // Store the loan scheme
@@ -30,11 +31,12 @@ class LoanSchemeForm extends Component
             'interest_rate' => $this->interest_rate,
             'collecting_duration' => $this->collecting_duration,
             'loan_term' => $this->loan_term,
+            'document_charge_percentage' => $this->document_charge_percentage,
         ]);
 
         session()->flash('success', 'Loan Scheme Created Successfully.');
 
-        
+
 
         return redirect('/loan-schemes');
 

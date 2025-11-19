@@ -15,6 +15,7 @@ class LoanScheme extends Model
         'interest_rate',
         'collecting_duration',
         'loan_term',
+        'document_charge_percentage',
     ];
 
     public function loans()

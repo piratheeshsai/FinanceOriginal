@@ -22,6 +22,12 @@
             @error('interest_rate') <span class="text-danger">{{ $message }}</span> @enderror
         </div>
 
+         <div class="mb-3">
+            <label for="document_charge_percentage" class="form-label">Document Charge Percentage</label>
+            <input type="number" step="0.01" wire:model="document_charge_percentage" class="form-control" id="document_charge_percentage">
+            @error('document_charge_percentage') <span class="text-danger">{{ $message }}</span> @enderror
+        </div>
+
         <div class="mb-3">
             <label for="collecting_duration" class="form-label">Collecting Duration</label>
             <select wire:model="collecting_duration" class="form-control" id="collecting_duration">
@@ -38,6 +44,8 @@
             <input type="number" wire:model="loan_term" class="form-control" id="loan_term">
             @error('loan_term') <span class="text-danger">{{ $message }}</span> @enderror
         </div>
+
+
 
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>
