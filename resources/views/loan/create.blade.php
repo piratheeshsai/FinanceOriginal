@@ -43,7 +43,11 @@
                                     <select id="loan_scheme" name="scheme_id" class="form-select border-teal">
                                         <option value="standard">Select Loan Scheme</option>
                                         @foreach ($loan_schemes as $loan_scheme)
-                                            <option value="{{ $loan_scheme->id }}">{{ $loan_scheme->loan_name }}</option>
+                                            <option
+                                                value="{{ $loan_scheme->id }}"
+                                                data-doc-charge="{{ $loan_scheme->document_charge_percentage ?? 0 }}">
+                                                {{ $loan_scheme->loan_name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -71,7 +75,7 @@
                                     <label for="document_charge" class="form-label fw-bold text-navy mb-1">Document Charge <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <input type="text" class="form-control border-teal" id="document_charge" name="document_charge"
-                                            placeholder="Enter amount in LKR" required>
+                                            placeholder="Enter amount in LKR" required readonly>
                                         <span class="input-group-text bg-teal text-white">LKR</span>
                                     </div>
                                     <div id="loanAmountFeedback" class="invalid-feedback">
@@ -95,10 +99,7 @@
                                 <div class="col-md-6">
                                     <label class="text-navy fw-semibold mb-1" for="guarantor">Guarantors <span class="text-danger">*</span></label>
                                     <select id="loan_guarantor" name="loan_guarantor[]" multiple class="form-select border-teal" required>
-                                        <option value="standard" disabled>Select Guarantors</option>
-                                        @foreach ($Guarantor as $Guarantors)
-                                            <option value="{{ $Guarantors->id }}">{{ $Guarantors->full_name }}</option>
-                                        @endforeach
+                                        <option value="" disabled>Select Guarantors</option>
                                     </select>
                                     <div class="invalid-feedback">Please select at least one guarantor.</div>
                                 </div>
@@ -155,52 +156,243 @@
     </style>
 
     <script>
-        document.getElementById('createLoanForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            var form = event.target;
-            if (form.checkValidity() === false) {
-                event.stopPropagation();
-                form.classList.add('was-validated');
-                alert('Please fill out all required fields correctly.');
-            } else {
-                form.submit();
-            }
-        }, false);
+document.getElementById('createLoanForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    var form = event.target;
+    if (form.checkValidity() === false) {
+        event.stopPropagation();
+        form.classList.add('was-validated');
+        alert('Please fill out all required fields correctly.');
+    } else {
+        form.submit();
+    }
+}, false);
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const LoansScheme = new Choices('#loan_scheme', {
-                searchEnabled: true,
-            });
-            const center = new Choices('#center_id', {
-                searchEnabled: true,
-                removeItemButton: true,
-                placeholder: true,
-                placeholderValue: 'Select Center'
-            });
-            const Guarantor = new Choices('#loan_guarantor', {
-                searchEnabled: true,
-                removeItemButton: true,
-                maxItemCount: 5
-            });
-        });
+document.querySelector('#loan_amount').addEventListener('input', function(event) {
+    const input = event.target;
+    const value = input.value.replace(/[^0-9.]/g, '');
+    input.value = value;
+    if (!value || isNaN(value) || Number(value) <= 0) {
+        input.classList.add('is-invalid');
+    } else {
+        input.classList.remove('is-invalid');
+    }
+});
 
-        document.querySelector('#loan_amount').addEventListener('input', function(event) {
-            const input = event.target;
-            const value = input.value.replace(/[^0-9.]/g, '');
-            input.value = value;
-            if (!value || isNaN(value) || Number(value) <= 0) {
-                input.classList.add('is-invalid');
-            } else {
-                input.classList.remove('is-invalid');
-            }
-        });
+$(document).ready(function() {
+    $('#loan_start').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        todayHighlight: true
+    });
+});
 
-        $(document).ready(function() {
-            $('#loan_start').datepicker({
-                format: 'yyyy-mm-dd',
-                autoclose: true,
-                todayHighlight: true
+// Document charge calculation
+document.addEventListener('DOMContentLoaded', function() {
+    function calculateDocumentCharge() {
+        const schemeSelect = document.getElementById('loan_scheme');
+        const amountInput = document.getElementById('loan_amount');
+        const docChargeInput = document.getElementById('document_charge');
+
+        const selectedOption = schemeSelect.options[schemeSelect.selectedIndex];
+        const docChargePercent = parseFloat(selectedOption.getAttribute('data-doc-charge')) || 0;
+        const amount = parseFloat(amountInput.value) || 0;
+
+        if (docChargePercent > 0 && amount > 0) {
+            const charge = ((docChargePercent / 100) * amount).toFixed(2);
+            docChargeInput.value = charge;
+        } else {
+            docChargeInput.value = '';
+        }
+    }
+
+    document.getElementById('loan_scheme').addEventListener('change', calculateDocumentCharge);
+    document.getElementById('loan_scheme').addEventListener('input', calculateDocumentCharge);
+    document.getElementById('loan_amount').addEventListener('input', calculateDocumentCharge);
+    document.getElementById('loan_amount').addEventListener('change', calculateDocumentCharge);
+});
+
+// Main loan type and customer/guarantor logic
+document.addEventListener('DOMContentLoaded', function () {
+    let currentGroupMembers = [];
+
+    // Initialize Choices.js for dropdowns
+    const loanTypeField = new Choices('#loan_type', { searchEnabled: false });
+    const LoansScheme = new Choices('#loan_scheme', { searchEnabled: true });
+    const center = new Choices('#center_id', {
+        searchEnabled: true,
+        removeItemButton: true,
+        placeholder: true,
+        placeholderValue: 'Select Center'
+    });
+
+    let groupField = new Choices('#group_id', { shouldSort: false, searchEnabled: true });
+    let customerField = initializeCustomerField();
+    // DO NOT initialize guarantorField here - it will be initialized dynamically
+
+    const customerFieldContainer = document.getElementById('customerFieldContainer');
+
+    // Handle loan type change
+    loanTypeField.passedElement.element.addEventListener('change', function () {
+        const loanType = loanTypeField.getValue(true);
+
+        if (loanType === 'individual') {
+            switchToIndividualLoanType();
+        } else if (loanType === 'group') {
+            switchToGroupLoanType();
+        } else {
+            resetFields();
+        }
+    });
+
+    // Handle group selection change
+    groupField.passedElement.element.addEventListener('change', function () {
+        const groupId = groupField.getValue(true);
+        if (groupId) {
+            fetchCustomersForGroup(groupId);
+        } else {
+            reinitializeCustomerField([]);
+            reinitializeGuarantorField([], 'No group members available');
+        }
+    });
+
+    // Handle customer selection change
+    document.getElementById('customer_id').addEventListener('change', function () {
+        const loanType = loanTypeField.getValue(true);
+        const selectedCustomerId = this.value;
+
+        if (loanType === 'group' && currentGroupMembers.length > 0) {
+            const filteredGuarantors = currentGroupMembers.filter(member => String(member.id) !== String(selectedCustomerId));
+            reinitializeGuarantorField(filteredGuarantors, 'No group members available');
+        }
+    });
+
+    function switchToIndividualLoanType() {
+        groupField.disable();
+        clearSelectedCustomer();
+        customerFieldContainer.style.display = 'block';
+        fetchCustomersForIndividual();
+        reinitializeGuarantorField([], 'Select group loan type');
+    }
+
+    function switchToGroupLoanType() {
+        groupField.enable();
+        clearSelectedCustomer();
+        customerFieldContainer.style.display = 'block';
+        reinitializeGuarantorField([], 'Select a group first');
+    }
+
+    function resetFields() {
+        groupField.disable();
+        clearSelectedCustomer();
+        reinitializeCustomerField([]);
+        reinitializeGuarantorField([], 'Select loan type first');
+        customerFieldContainer.style.display = 'none';
+    }
+
+    async function fetchCustomersForIndividual() {
+        try {
+            const response = await fetch('/api/customers?group_id=null');
+            const data = await response.json();
+            currentGroupMembers = [];
+            reinitializeCustomerField(data, 'No customers available');
+        } catch (error) {
+            console.error('Error fetching individual customers:', error);
+        }
+    }
+
+    async function fetchCustomersForGroup(groupId) {
+        try {
+            const response = await fetch(`/api/customers?group_id=${groupId}`);
+            const data = await response.json();
+            currentGroupMembers = data;
+            reinitializeCustomerField(data, 'No customers found');
+            reinitializeGuarantorField(data, 'No group members available');
+        } catch (error) {
+            console.error('Error fetching group customers:', error);
+        }
+    }
+
+    function reinitializeCustomerField(data, emptyMessage = 'No customers available') {
+        if (customerField) {
+            customerField.destroy();
+        }
+
+        const selectElement = document.querySelector('#customer_id');
+        selectElement.innerHTML = '';
+
+        if (data && data.length > 0) {
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                const displayParts = [];
+                if (item.full_name) displayParts.push(item.full_name);
+                if (item.nic) displayParts.push(`(${item.nic})`);
+
+                option.textContent = displayParts.join(' ') || item.group_code || `Item ${item.id}`;
+                selectElement.appendChild(option);
             });
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = emptyMessage;
+            option.disabled = true;
+            selectElement.appendChild(option);
+        }
+
+        customerField = initializeCustomerField();
+    }
+
+    function reinitializeGuarantorField(data, emptyMessage = 'No group members available') {
+        if (window.guarantorField) {
+            window.guarantorField.destroy();
+            window.guarantorField = null;
+        }
+
+        const selectElement = document.querySelector('#loan_guarantor');
+        selectElement.innerHTML = '';
+
+        if (data && data.length > 0) {
+            data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.full_name;
+                selectElement.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = emptyMessage;
+            option.disabled = true;
+            selectElement.appendChild(option);
+        }
+
+        window.guarantorField = new Choices('#loan_guarantor', {
+            shouldSort: false,
+            removeItemButton: true,
+            placeholder: true,
+            placeholderValue: 'Select Guarantors',
+            maxItemCount: 5,
+            searchEnabled: true
         });
-    </script>
+    }
+
+    function initializeCustomerField() {
+        return new Choices('#customer_id', {
+            shouldSort: false,
+            removeItemButton: true,
+            placeholder: true,
+            placeholderValue: 'Select Customer'
+        });
+    }
+
+    function clearSelectedCustomer() {
+        if (customerField) {
+            customerField.clearStore();
+            customerField.clearInput();
+            customerField.removeActiveItems();
+        }
+    }
+});
+</script>
 @endsection

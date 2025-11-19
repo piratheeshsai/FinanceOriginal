@@ -45,7 +45,10 @@
                                     <select id="loan_scheme" name="scheme_id" class="form-select border-teal" required>
                                         <option value="">Select Loan Scheme</option>
                                         @foreach ($loan_schemes as $loan_scheme)
-                                            <option value="{{ $loan_scheme->id }}" {{ old('scheme_id', $loan->scheme_id) == $loan_scheme->id ? 'selected' : '' }}>
+                                            <option
+                                                value="{{ $loan_scheme->id }}"
+                                                data-doc-charge="{{ $loan_scheme->document_charge_percentage ?? 0 }}"
+                                                {{ old('scheme_id', $loan->scheme_id) == $loan_scheme->id ? 'selected' : '' }}>
                                                 {{ $loan_scheme->loan_name }}
                                             </option>
                                         @endforeach
@@ -75,7 +78,9 @@
                                     <label for="document_charge" class="form-label fw-bold text-navy mb-1">Document Charge <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <input type="text" class="form-control border-teal" id="document_charge" name="document_charge"
-                                            placeholder="Enter amount in LKR" value="{{ old('document_charge', $loan->document_charge) }}" required>
+                                            placeholder="Enter amount in LKR"
+                                            value="{{ old('document_charge', $loan->document_charge) }}"
+                                            required readonly>
                                         <span class="input-group-text bg-teal text-white">LKR</span>
                                     </div>
                                 </div>
@@ -178,4 +183,29 @@
             });
         });
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    function calculateDocumentCharge() {
+        const schemeSelect = document.getElementById('loan_scheme');
+        const amountInput = document.getElementById('loan_amount');
+        const docChargeInput = document.getElementById('document_charge');
+
+        const selectedOption = schemeSelect.options[schemeSelect.selectedIndex];
+        const docChargePercent = parseFloat(selectedOption.getAttribute('data-doc-charge')) || 0;
+        const amount = parseFloat(amountInput.value) || 0;
+
+        if (docChargePercent > 0 && amount > 0) {
+            const charge = ((docChargePercent / 100) * amount).toFixed(2);
+            docChargeInput.value = charge;
+        } else {
+            docChargeInput.value = '';
+        }
+    }
+
+    document.getElementById('loan_scheme').addEventListener('change', calculateDocumentCharge);
+    document.getElementById('loan_scheme').addEventListener('input', calculateDocumentCharge);
+    document.getElementById('loan_amount').addEventListener('input', calculateDocumentCharge);
+    document.getElementById('loan_amount').addEventListener('change', calculateDocumentCharge);
+});
+</script>
 @endsection
