@@ -230,7 +230,7 @@
         <!-- Company Details Section -->
         <div class="company-info">
             <div class="company-name">RURAL DEVELOPMENT INVERSTMENT (PVT)</div>
-            <div class="company-address">Batticaloa</div>
+            <div class="company-address">Kaluwanchidy</div>
             <!-- Add this if you have a logo -->
             <!-- <img src="/path-to-logo.png" alt="Company Logo" style="height: 60px; margin-top: 1rem;"> -->
         </div>
@@ -296,7 +296,7 @@
                 <span class="detail-label">Description</span>
                 <span class="detail-value">{{ $voucher->description }}</span>
             </div>
-           
+
         </div>
 
         <div class="signatures">
