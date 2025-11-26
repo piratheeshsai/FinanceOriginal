@@ -15,70 +15,110 @@ class PendingCollection extends Component
 {
     use WithPagination;
 
-    public $perPage = 10;
+    public $perPage = 40;
     public $dateFrom;
     public $dateTo;
     public $centerId;
+    public $status;
 
-   
     private function getQuery()
     {
         return LoanCollectionSchedule::with(['loan.customer', 'loan.center'])
+            ->whereHas('loan') // Only get schedules with existing loans
             ->where('description', 'Installment Payment')
-            ->where('pending_due', '>', 20)
+            ->where('pending_due', '>', 0)
+            ->whereDate('date', '<', now()) // Only overdue (past due date)
             ->when($this->dateFrom, fn($q) => $q->whereDate('date', '>=', $this->dateFrom))
             ->when($this->dateTo, fn($q) => $q->whereDate('date', '<=', $this->dateTo))
             ->when($this->centerId, fn($q) => $q->whereHas('loan', fn($q) => $q->where('center_id', $this->centerId)))
-            // Spatie permission check for branch access
             ->when(!Auth::user()->hasPermissionTo('view all branches'), function($q) {
                 $q->whereHas('loan.center', fn($q) => $q->where('branch_id', Auth::user()->branch_id));
             })
-            ->whereDate('date', '<', now())
-            ->orderBy('date', 'desc')
-            ->select(['date', 'loan_id', 'due', 'paid', 'pending_due', 'description']);
+            ->orderBy('date', 'desc') // Changed from 'asc' to 'desc'
+            ->select('id', 'date', 'loan_id', 'due', 'paid', 'pending_due', 'description');
     }
 
-    public function exportPdf()
+    // Get today's overdue amount (payments due today but not paid)
+    private function getTodayOverdueAmount()
     {
-        $baseQuery = $this->getQuery();
+        return LoanCollectionSchedule::whereHas('loan')
+            ->where('description', 'Installment Payment')
+            ->where('pending_due', '>', 0)
+            ->whereDate('date', '=', now()->toDateString())
+            ->when($this->centerId, fn($q) => $q->whereHas('loan', fn($q) => $q->where('center_id', $this->centerId)))
+            ->when(!Auth::user()->hasPermissionTo('view all branches'), function($q) {
+                $q->whereHas('loan.center', fn($q) => $q->where('branch_id', Auth::user()->branch_id));
+            })
+            ->sum('pending_due');
+    }
 
-        $data = [
-            'collections' => $baseQuery->get(),
-            'totalPending' => $baseQuery->sum('pending_due'),
-            'overdueCount' => $baseQuery->count(),
-            'averageDelay' => $this->getAverageDelay(),
-            'filters' => [
-                'dateFrom' => $this->dateFrom,
-                'dateTo' => $this->dateTo,
-                'centerId' => $this->centerId
-            ]
-        ];
-
-        $pdf = Pdf::loadView('exports.pending-collections-pdf', $data)
-            ->setPaper('a4', 'landscape');
-
-        return response()->streamDownload(
-            fn () => print($pdf->output()),
-            'pending-collections-'.now()->format('Ymd-His').'.pdf'
-        );
+    // Get today's overdue count
+    private function getTodayOverdueCount()
+    {
+        return LoanCollectionSchedule::whereHas('loan')
+            ->where('description', 'Installment Payment')
+            ->where('pending_due', '>', 0)
+            ->whereDate('date', '=', now()->toDateString())
+            ->when($this->centerId, fn($q) => $q->whereHas('loan', fn($q) => $q->where('center_id', $this->centerId)))
+            ->when(!Auth::user()->hasPermissionTo('view all branches'), function($q) {
+                $q->whereHas('loan.center', fn($q) => $q->where('branch_id', Auth::user()->branch_id));
+            })
+            ->distinct('loan_id')
+            ->count('loan_id');
     }
 
     private function getAverageDelay()
     {
-        return LoanCollectionSchedule::where('description', 'Installment Payment')
-            ->where('pending_due', '>', 20)
+        return LoanCollectionSchedule::whereHas('loan')
+            ->where('description', 'Installment Payment')
+            ->where('pending_due', '>', 0)
+            ->whereDate('date', '<', now())
             ->when($this->dateFrom, fn($q) => $q->whereDate('date', '>=', $this->dateFrom))
             ->when($this->dateTo, fn($q) => $q->whereDate('date', '<=', $this->dateTo))
             ->when($this->centerId, fn($q) => $q->whereHas('loan', fn($q) => $q->where('center_id', $this->centerId)))
-            // Spatie permission check for branch access
             ->when(!Auth::user()->hasPermissionTo('view all branches'), function($q) {
                 $q->whereHas('loan.center', fn($q) => $q->where('branch_id', Auth::user()->branch_id));
             })
-            ->whereDate('date', '<', now())
             ->selectRaw('AVG(DATEDIFF(NOW(), date)) as average_delay')
             ->value('average_delay') ?? 0;
     }
 
+    public function exportPdf()
+    {
+        set_time_limit(300);
+        ini_set('memory_limit', '512M');
+
+        try {
+            $baseQuery = $this->getQuery();
+
+            $data = [
+                'collections' => $baseQuery->limit(1000)->get(),
+                'totalOverdue' => $baseQuery->sum('pending_due'),
+                'overdueCount' => $baseQuery->count(),
+                'averageDelay' => round($this->getAverageDelay()),
+                'todayOverdue' => $this->getTodayOverdueAmount(),
+                'todayCount' => $this->getTodayOverdueCount(),
+                'filters' => [
+                    'dateFrom' => $this->dateFrom,
+                    'dateTo' => $this->dateTo,
+                    'centerId' => $this->centerId
+                ]
+            ];
+
+            $pdf = Pdf::loadView('exports.pending-collections-pdf', $data)
+                ->setPaper('a4', 'landscape')
+                ->setOption('enable-local-file-access', true);
+
+            return response()->streamDownload(
+                fn () => print($pdf->output()),
+                'overdue-collections-'.now()->format('Ymd-His').'.pdf'
+            );
+        } catch (\Exception $e) {
+            \Log::error('PDF Export Error: ' . $e->getMessage());
+            session()->flash('error', 'Failed to generate PDF. Please try again.');
+            return null;
+        }
+    }
 
     public function exportExcel()
     {
@@ -86,11 +126,9 @@ class PendingCollection extends Component
 
         return Excel::download(
             new PendingCollectionsExport($data),
-            'pending-collections-'.now()->format('Ymd-His').'.xlsx'
+            'overdue-collections-'.now()->format('Ymd-His').'.xlsx'
         );
     }
-
-
 
     public function render()
     {
@@ -107,7 +145,9 @@ class PendingCollection extends Component
             'centers' => $centers,
             'totalPending' => $baseQuery->sum('pending_due'),
             'overdueCount' => $baseQuery->count(),
-            'averageDelay' => round($this->getAverageDelay())
+            'averageDelay' => round($this->getAverageDelay()),
+            'todayOverdueAmount' => $this->getTodayOverdueAmount(),
+            'todayOverdueCount' => $this->getTodayOverdueCount()
         ]);
     }
 }

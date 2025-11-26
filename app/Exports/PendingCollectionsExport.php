@@ -28,7 +28,6 @@ class PendingCollectionsExport implements FromCollection, WithHeadings, WithMapp
             'Loan Account',
             'Customer',
             'Due Amount',
-            'Paid Amount',
             'Pending Amount',
             'Center',
         ];
@@ -41,7 +40,7 @@ class PendingCollectionsExport implements FromCollection, WithHeadings, WithMapp
             $collection->loan->loan_number,
             $collection->loan->customer->name,
             $collection->due,
-            $collection->paid,
+
             $collection->pending_due,
             $collection->loan->center->name,
         ];
