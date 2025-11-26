@@ -8,6 +8,7 @@ use App\Services\LoanCollectionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,7 +17,7 @@ class LoanCollectionTable extends Component
 {
     use WithPagination;
 
-    public $perPage = 250;
+    public $perPage = 50;
     public $centerId;
     public $searchTerm = '';
     public $selectedCollection = null;
@@ -37,7 +38,6 @@ class LoanCollectionTable extends Component
 
     public function viewCollection($scheduleId)
     {
-
         $this->dispatch('openCollectionModal', $scheduleId);
     }
 
@@ -56,27 +56,44 @@ class LoanCollectionTable extends Component
 
     public function exportPdf()
     {
-        $baseQuery = $this->getQuery();
+        // Increase execution time
+        set_time_limit(300); // 5 minutes
+        ini_set('memory_limit', '512M');
 
-        $data = [
-            'collections' => $baseQuery->get(),
-            'totalPending' => $baseQuery->sum('pending_due'),
-            'totalDue' => $baseQuery->sum('due'),
-            'collectionCount' => $baseQuery->count(),
-            'date' => now()->format('Y-m-d'),
-            'filters' => [
-                'centerId' => $this->centerId,
-                'searchTerm' => $this->searchTerm
-            ]
-        ];
+        try {
+            $baseQuery = $this->getQuery();
 
-        $pdf = Pdf::loadView('exports.today-collections-pdf', $data)
-            ->setPaper('a4', 'landscape');
+            // Limit records to prevent memory issues
+            $collections = $baseQuery->limit(1000)->get();
 
-        return response()->streamDownload(
-            fn() => print($pdf->output()),
-            'today-collections-' . now()->format('Ymd-His') . '.pdf'
-        );
+            $data = [
+                'collections' => $collections,
+                'totalPending' => $baseQuery->sum('pending_due'),
+                'totalDue' => $baseQuery->sum('due'),
+                'collectionCount' => $baseQuery->count(),
+                'date' => now()->format('Y-m-d'),
+                'filters' => [
+                    'centerId' => $this->centerId,
+                    'searchTerm' => $this->searchTerm
+                ]
+            ];
+
+            $pdf = Pdf::loadView('exports.today-collections-pdf', $data)
+                ->setPaper('a4', 'landscape')
+                ->setOption('enable-local-file-access', true);
+
+            return response()->streamDownload(
+                fn() => print($pdf->output()),
+                'today-collections-' . now()->format('Ymd-His') . '.pdf'
+            );
+
+        } catch (\Exception $e) {
+            Log::error('PDF Export Error: ' . $e->getMessage());
+            $this->dispatch('show-error-alert', [
+                'message' => 'Failed to generate PDF. Please try with fewer records.'
+            ]);
+            return null;
+        }
     }
 
 

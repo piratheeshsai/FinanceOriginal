@@ -14,9 +14,18 @@
                         <i class="fas fa-file-excel me-2 fs-5"></i>
                         <span class="d-none d-sm-inline">Excel Export</span>
                     </button> --}}
-                    <button class="btn btn-sm btn-primary d-flex align-items-center" wire:click="exportPdf">
-                        <i class="fas fa-file-pdf me-2 fs-5"></i>
-                        <span class="d-none d-sm-inline">PDF Export</span>
+                    <button class="btn btn-sm btn-primary d-flex align-items-center"
+                            wire:click="exportPdf"
+                            wire:loading.attr="disabled"
+                            wire:target="exportPdf">
+                        <span wire:loading.remove wire:target="exportPdf">
+                            <i class="fas fa-file-pdf me-2 fs-5"></i>
+                            <span class="d-none d-sm-inline">PDF Export</span>
+                        </span>
+                        <span wire:loading wire:target="exportPdf">
+                            <i class="fas fa-spinner fa-spin me-2"></i>
+                            <span class="d-none d-sm-inline">Generating...</span>
+                        </span>
                     </button>
                 </div>
             </div>
