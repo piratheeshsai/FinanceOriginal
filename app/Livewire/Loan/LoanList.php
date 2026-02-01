@@ -87,7 +87,7 @@ class LoanList extends Component
                     });
             });
         })
-        ->orderBy('created_at', 'desc')
+        ->latest()
         ->paginate($this->perPage);
 
         // Get centers for the dropdown

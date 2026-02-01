@@ -128,11 +128,11 @@
                             <td class="text-center d-none d-sm-table-cell" style="width: 130px;">
                                 <span class="badge bg-danger">{{ now()->diffInDays($schedule->date) }} days</span>
                             </td>
-                            <td class="fw-semibold" style="width: 150px;">#{{ $schedule->loan->loan_number }}</td>
+                            <td class="fw-semibold" style="width: 150px;">#{{ $schedule->loan->loan_number ?? ' '}}</td>
                             <td class="d-none d-md-table-cell customer-name" style="width: 200px; max-width: 200px;">
-                                <div class="d-flex align-items-center" title="{{ $schedule->loan->customer->full_name }}">
+                                <div class="d-flex align-items-center" title="{{ $schedule->loan->customer->full_name ?? '' }}">
                                     <i class="fas fa-user-circle me-2 text-muted flex-shrink-0"></i>
-                                    <span class="text-truncate">{{ $schedule->loan->customer->full_name }}</span>
+                                    <span class="text-truncate">{{ $schedule->loan->customer->full_name ?? '' }}</span>
                             </div>
                             </td>
                             <td class="text-end fw-bold text-danger" style="width: 150px;">{{ number_format($schedule->pending_due, 2) }}</td>

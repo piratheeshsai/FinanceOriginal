@@ -89,6 +89,9 @@
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-9 ps-2">
                                     Interest Rate
                                 </th>
+                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-9 ps-2">
+                                    Document Charge
+                                </th>
                                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-9 ps-2">
                                     Payment Details
                                 </th>
@@ -147,6 +150,10 @@
                                     <td>
                                         <p class="text-sm font-weight-bold mb-0">
                                             {{ $loan->loanScheme->interest_rate ?? '0' }}%</p>
+                                    </td>
+                                     <td>
+                                        <p class="text-sm font-weight-bold mb-0">
+                                            {{ $loan->document_charge ?? 'Not Paid' }}</p>
                                     </td>
                                     <td>
                                         <div class="d-flex flex-column">

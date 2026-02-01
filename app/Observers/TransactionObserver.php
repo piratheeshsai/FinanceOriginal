@@ -13,12 +13,12 @@ class TransactionObserver
      */
     private function adjustBalance(Account $account, float $amount, bool $isDebit): void
     {
-        // Handle contra equity accounts (like owner_draw)
+
         if ($account->category === 'equity' && $account->type === 'owner_draw') {
             if ($isDebit) {
-                $account->balance += $amount; // Owner Draw increases with debit
+                $account->balance += $amount;
             } else {
-                $account->balance -= $amount; // Owner Draw decreases with credit
+                $account->balance -= $amount;
             }
             return;
         }
@@ -26,17 +26,17 @@ class TransactionObserver
         if ($isDebit) {
             // Debit rules
             if (in_array($account->category, ['asset', 'expense'])) {
-                $account->balance += $amount; // Assets/expenses increase with debit
+                $account->balance += $amount;
             } else {
-                $account->balance -= $amount; // Liabilities/equity/revenue decrease with debit
+                $account->balance -= $amount;
             }
 
         } else {
             // Credit rules
             if (in_array($account->category, ['liability', 'equity', 'revenue'])) {
-                $account->balance += $amount; // Liabilities/equity/revenue increase with credit
+                $account->balance += $amount;
             } else {
-                $account->balance -= $amount; // Assets/expenses decrease with credit
+                $account->balance -= $amount;
             }
         }
     }
@@ -107,5 +107,5 @@ class TransactionObserver
         });
     }
 
-    // ... restored() and forceDeleted() can remain empty
+    
 }

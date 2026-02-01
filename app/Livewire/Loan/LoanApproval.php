@@ -286,7 +286,7 @@ public function generateCollections($loan) {
     {
 
         $loans = Loan::with('customer', 'approval')
-        ->where('created_at', '>=', now()->subDays(10))
+        ->where('created_at', '>=', now()->subDays(50))
         ->orderByRaw("CASE
             WHEN EXISTS (SELECT 1 FROM loan_approvals WHERE loan_approvals.loan_id = loan.id AND loan_approvals.status = 'pending') THEN 1
             WHEN EXISTS (SELECT 1 FROM loan_approvals WHERE loan_approvals.loan_id = loan.id AND loan_approvals.status = 'approved') THEN 2

@@ -29,12 +29,11 @@ class CollectDue extends Component
     public $description;
 
     protected $rules = [
-        'repaymentAmount' => 'required|numeric|min:1',
+        'repaymentAmount' => 'required',
         'repaymentMethod' => 'required|string',
         'collectionDate' => 'required|date',
         'description' => 'nullable|string',
     ];
-
 
     private $collectionService;
 

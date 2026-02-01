@@ -51,6 +51,7 @@
                         <th style="width: 110px;">Loan No</th>
                         <th style="max-width: 180px;">Customer</th>
                         <th style="width: 110px;">Amount</th>
+                        <th style="width: 110px;">Document Charge</th>
                         <th style="max-width: 160px;">Loan Scheme</th>
                         <th style="width: 110px;">Date</th>
                         <th class="text-center" style="width: 100px;">Status</th>
@@ -69,6 +70,7 @@
                                 <small class="text-muted text-truncate">{{ $loan->customer->nic }}</small>
                             </td>
                             <td>{{ number_format($loan->loan_amount, 2) }}</td>
+                            <td >{{ number_format($loan->document_charge, 2) }}</td>
                             <td style="max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 <span class="text-truncate" title="{{ $loan->loanScheme->loan_name }}">
                                     {{ $loan->loanScheme->loan_name }}
