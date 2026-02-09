@@ -173,7 +173,7 @@
                                         </td>
                                         <td class="text-center">
                                             <span class="text-xs font-weight-bold">
-                                                {{ $supplier->paymentCategory->name }}
+                                                {{ $supplier->paymentCategory?->name ?? '-' }}
                                             </span>
                                         </td>
                                         <td class="text-center">
