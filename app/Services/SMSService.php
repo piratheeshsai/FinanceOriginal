@@ -82,7 +82,7 @@ class SMSService
         try {
             // Get company details from database
             $company = Company::first();
-            $companyName = $company->name ?? 'Rural Development Investment';
+            $companyName = $company->name ?? 'office';
             $systemUrl = $company->website ?? 'your-system-url.com';
             $hotlineNumber = $company->phone ?? '0771234567';
 
